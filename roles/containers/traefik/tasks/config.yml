@@ -1,0 +1,13 @@
+---
+- name: Create and chmod folders
+  file:
+    path: "{{ docker_dir }}/{{ container_name }}"
+    state: directory
+    mode: 0755
+    recurse: yes
+
+- name: Install the Traefik config
+  copy:
+    src: "files/"
+    dest: "{{ docker_dir }}/{{ container_name }}"
+  notify: restart traefik

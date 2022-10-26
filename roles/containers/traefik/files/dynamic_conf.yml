@@ -1,0 +1,32 @@
+http:
+  routers:
+    pihole:
+      entryPoints:
+        - http
+      service: pihole
+      middlewares:
+        - homerCors
+      rule: Host(`pihole.homelab`)
+    homebridge:
+      entryPoints:
+        - http
+      rule: Host(`homebridge.homelab`)
+      service: homebridge
+  services:
+    pihole:
+      loadBalancer:
+        servers:
+           - url: http://pi.hole:8080
+    homebridge:
+      loadbalancer:
+        servers:
+          - url: http://pi.hole:8581
+  middlewares:
+    homerCors:
+      headers:
+        accessControlAllowMethods:
+          - GET
+          - OPTIONS
+          - PUT
+        accessControlAllowOriginList:
+          - http://homer.homelab

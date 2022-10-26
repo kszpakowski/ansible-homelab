@@ -1,0 +1,31 @@
+locale: en_US.UTF-8
+
+
+#
+# Packages
+#
+extra_packages:
+    - fish
+    - iperf3
+    - speedtest-cli
+    - htop
+    - stow
+    - git
+    - neofetch
+    - neovim
+    - tmux
+    - mosh
+    - rsync
+    - lm-sensors
+    - iotop
+    - ncdu
+    - hddtemp
+
+
+#
+# Docker
+#
+docker_users: 
+  - ansible
+
+docker_dir: /opt/docker/data

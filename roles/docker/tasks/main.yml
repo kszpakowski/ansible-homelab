@@ -1,0 +1,87 @@
+---
+- include_tasks: repo_arch.yml
+
+- name: Include OS-specific variables
+  include_vars: "{{ ansible_facts['distribution'] }}.yml"
+- name: Install required system packages
+  package:
+    state: present
+    name: "{{ docker_deps }}"
+
+- name: Install Docker (Ubuntu)
+  when: ansible_facts['distribution'] == 'Ubuntu'
+  block:
+  - name: Add Docker GPG apt Key
+    apt_key:
+      url: https://download.docker.com/linux/ubuntu/gpg
+      state: present
+
+  - name: Add Docker Repository
+    apt_repository:
+      repo: "deb [arch={{ repo_arch }}] https://download.docker.com/linux/{{ ansible_facts['distribution'] | lower }} {{ ansible_lsb['codename'] }} stable"
+      state: present
+
+- name: Install Docker (Raspbian)
+  when: ansible_facts['distribution'] == 'Debian'
+  block:
+  - name: Add Docker GPG apt Key
+    apt_key:
+      url: https://download.docker.com/linux/raspbian/gpg
+      state: present
+
+  - name: Add Docker Repository
+    apt_repository:
+      repo: "deb [arch=arm64] https://download.docker.com/linux/raspbian bullseye stable"
+      state: present
+
+  - name: Switch to iptables-legacy
+    alternatives:
+      name: iptables
+      path: /usr/sbin/iptables-legacy
+
+  - name: Switch to ip6tables-legacy
+    alternatives:
+      name: ip6tables
+      path: /usr/sbin/ip6tables-legacy
+
+  - name: Switch to pip3
+    alternatives:
+      name: pip
+      link: /usr/bin/pip
+      path: /usr/bin/pip3
+
+  - name: Switch to python3
+    alternatives:
+      name: python
+      link: /usr/bin/python
+      path: /usr/bin/python3
+
+- name: Update apt and install docker-ce
+  when: ansible_facts['os_family'] == 'Debian'
+  apt:
+    update_cache: yes
+    name: "{{ docker_packages }}"
+    state: present
+
+- name: Ensure group docker exists
+  group:
+    name: docker
+    state: present
+
+- name: Ensure docker users are added to the docker group.
+  user:
+    name: "{{ item }}"
+    groups: docker
+    append: true
+  with_items: "{{ docker_users }}"
+
+- name: Install Docker Module for Python
+  pip:
+    name: docker
+
+- name: Make sure Docker is running and enabled
+  service:
+    name: docker
+    state: started
+    enabled: yes
+
